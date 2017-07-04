@@ -1869,92 +1869,6 @@ class VstSession:
             return setting == 'true'
         return setting
 
-class youkuDecoder:
-    def __init__( self ):
-        return
-
-    def getFileIDMixString(self,seed):
-        mixed = []
-        source = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/\:._-1234567890")
-        seed = float(seed)
-        for i in range(len(source)):
-            seed = (seed * 211 + 30031 ) % 65536
-            index = math.floor(seed /65536 *len(source))
-            mixed.append(source[int(index)])
-            source.remove(source[int(index)])
-        return mixed
-
-    def getFileId(self,fileId,seed):
-        mixed = self.getFileIDMixString(seed)
-        ids = fileId.split('*')
-        realId = []
-        for i in range(0,len(ids)-1):
-            realId.append(mixed[int(ids[i])])
-        return ''.join(realId)
-
-    def trans_e(self, a, c):
-        b = range(256)
-        f = 0
-        result = ''
-        h = 0
-        while h < 256:
-            f = (f + b[h] + ord(a[h % len(a)])) % 256
-            b[h], b[f] = b[f], b[h]
-            h += 1
-        q = f = h = 0
-        while q < len(c):
-            h = (h + 1) % 256
-            f = (f + b[h]) % 256
-            b[h], b[f] = b[f], b[h]
-            if isinstance(c[q], int):
-                result += chr(c[q] ^ b[(b[h] + b[f]) % 256])
-            else:
-                result += chr(ord(c[q]) ^ b[(b[h] + b[f]) % 256])
-            q += 1
-        return result
-
-    def trans_f(self, a, c):
-        """
-        :argument a: list
-        :param c:
-        :return:
-        """
-        b = []
-        for f in range(len(a)):
-            i = ord(a[f][0]) - 97 if "a" <= a[f] <= "z" else int(a[f]) + 26
-            e = 0
-            while e < 36:
-                if c[e] == i:
-                    i = e
-                    break
-                e += 1
-            v = i - 26 if i > 25 else chr(i + 97)
-            b.append(str(v))
-        return ''.join(b)
-
-    f_code_1 = 'becaf9be'
-    f_code_2 = 'bf7e5f01'
-
-    def _calc_ep(self, sid, fileId, token):
-        ep = self.trans_e(self.f_code_2, '%s_%s_%s' % (sid, fileId, token))
-        return base64.b64encode(ep)
-
-    def _calc_ep2(self, vid, ep):
-        e_code = self.trans_e(self.f_code_1, base64.b64decode(ep))
-        sid, token = e_code.split('_')
-        new_ep = self.trans_e(self.f_code_2, '%s_%s_%s' % (sid, vid, token))
-        return base64.b64encode(new_ep), token, sid
-
-    def get_sid(self, ep):
-        e_code = self.trans_e(self.f_code_1, base64.b64decode(ep))
-        return e_code.split('_')
-
-    def generate_ep(self, no, fileid, sid, token):
-        ep = urllib.quote(self._calc_ep(sid, fileid, token).encode('latin1'),
-            safe="~()*!.'"
-        )
-        return ep
-
 def getNumber(data, k):
     try:
         s = data[k]
@@ -2005,10 +1919,21 @@ def getProperty(item, key):
 
     return value
 
+def fetch_cna():
+    url = 'http://gm.mmstat.com/yt/ykcomment.play.commentInit?cna='
+    req = urllib2.urlopen(url)
+    return req.headers['Set-Cookie'].split(';')[0].split('=')[1]
+
+def youku_ups(vid, ccode='0401'):
+    url = 'http://ups.youku.com/ups/get.json?vid={}&ccode={}'.format(vid, ccode)
+    url += '&client_ip=192.168.1.1'
+    url += '&utid=' + fetch_cna()
+    url += '&client_ts=' + str(int(time.time()))
+    return json.loads(GetHttpData(url))
+
 
 def play(vid, playContinue=False):
     readSettings()
-    playid = vid
 
     try:
         ret = eval(cache.get('history'))
@@ -2040,15 +1965,12 @@ def play(vid, playContinue=False):
 
     xbmc.executebuiltin("ActivateWindow(busydialog)")
     try:
-        movinfo = json.loads(GetHttpData('http://play.youku.com/play/get.json?vid=%s&ct=12' % playid).replace('\r\n',''))
-        movdat = movinfo['data']
-        movinfo = json.loads(GetHttpData('http://play.youku.com/play/get.json?vid=%s&ct=10' % playid).replace('\r\n',''))
-        movdat1 = movinfo['data']
+        movdat = youku_ups(vid, '0401')['data']
         assert 'stream' in movdat
-        assert 'stream' in movdat1
-    except:
+    except Exception, e:
+        log(e)
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常0，无法播放')
         return
 
     #Select resolution.
@@ -2058,7 +1980,7 @@ def play(vid, playContinue=False):
     try:
         for i in range(settings['resolution'], len(settings_data['resolution'])):
             for t in settings_data['resolution_type'][i]:
-                for s in movdat1['stream'][::-1]:
+                for s in movdat['stream'][::-1]:
                     if settings['language'] == 0 or language_code == s['audio_lang'] or s['audio_lang'] == 'default':
                         if t == s['stream_type']:
                             stream = s
@@ -2070,12 +1992,12 @@ def play(vid, playContinue=False):
                 break
     except:
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常2，无法播放')
         return
 
     if not stream.has_key('stream_type'):
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常3，无法播放')
         return
 
 
@@ -2084,34 +2006,16 @@ def play(vid, playContinue=False):
         urls = []
         segs = stream['segs']
 
-        oip = movdat['security']['ip']
-        ep = movdat['security']['encrypt_string']
-        sid, token = youkuDecoder().get_sid(ep)
-
         for no in range(len(segs)):
             k = segs[no]['key']
             assert k != -1
-            fileid = stream['segs'][no]['fileid']
-            ep = youkuDecoder().generate_ep(no, fileid, sid, token)
-            q = urllib.urlencode(dict(
-                ctype = 12,
-                ev    = 1,
-                K     = k,
-                ep    = urllib.unquote(ep),
-                oip   = oip,
-                token = token,
-                yxon  = 1
-            ))
-            u = 'http://k.youku.com/player/getFlvPath/sid/{sid}_00/st/{container}/fileid/{fileid}?{q}'.format(
-                    sid       = sid,
-                    container = resolution_map[resolution],
-                    fileid    = fileid,
-                    q         = q
-            )
-            urls += [i['server'] for i in json.loads(GetHttpData(u))]
+            urls.append(segs[no]["cdn_url"])
 
         playlist = xbmc.PlayList(1)
         playlist.clear()
+        title = movdat['video']['title']
+        listitem=xbmcgui.ListItem(title)
+        listitem.setInfo(type="Video",infoLabels={"Title":title})
 
         if settings_data['play_type'][settings['play']] == 'concatenate' and resolution_map[resolution] == 'flv':
             vc.start(urls)
@@ -2121,10 +2025,10 @@ def play(vid, playContinue=False):
             listitem.setInfo(type="Video", infoLabels={"Title":movdat['video']['title']})
             playlist.add('http://127.0.0.1:%d' % port, listitem)
         elif settings_data['play_type'][settings['play']] == 'list':
+            _title =  u"%s - 第 %s/%s 节"
             for i in range(len(urls)):
-                title =movdat['video']['title'] + u" - 第"+str(i+1)+"/"+str(len(urls)) + u"节"
-                listitem=xbmcgui.ListItem(title)
-                listitem.setInfo(type="Video",infoLabels={"Title":title})
+                listitem = xbmcgui.ListItem(_title % (title, i+1, len(urls)))
+                listitem.setInfo(type="Video", infoLabels={"Title": _title})
                 playlist.add(urls[i], listitem)
         else:
             playurl = 'stack://' + ' , '.join(urls)
