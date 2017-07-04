@@ -2025,9 +2025,9 @@ def play(vid, playContinue=False):
             listitem.setInfo(type="Video", infoLabels={"Title":movdat['video']['title']})
             playlist.add('http://127.0.0.1:%d' % port, listitem)
         elif settings_data['play_type'][settings['play']] == 'list':
-            _title =  u"%s - 第 %s/%s 节"
             for i in range(len(urls)):
-                listitem = xbmcgui.ListItem(_title % (title, i+1, len(urls)))
+                _title =  u"%s - 第 %s/%s 节" % (title, i+1, len(urls))
+                listitem = xbmcgui.ListItem(_title)
                 listitem.setInfo(type="Video", infoLabels={"Title": _title})
                 playlist.add(urls[i], listitem)
         else:
