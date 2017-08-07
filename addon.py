@@ -9,6 +9,8 @@ try:
 except:
    import storageserverdummy as StorageServer
 
+import requests
+
 __addonid__ = "plugin.video.youkutv"
 __addon__ = xbmcaddon.Addon(id=__addonid__)
 __cwd__ = __addon__.getAddonInfo('path')
@@ -1924,12 +1926,16 @@ def fetch_cna():
     req = urllib2.urlopen(url)
     return req.headers['Set-Cookie'].split(';')[0].split('=')[1]
 
-def youku_ups(vid, ccode='0401'):
+def youku_ups(vid, ccode='0401', referer='http://v.youku.com'):
     url = 'http://ups.youku.com/ups/get.json?vid={}&ccode={}'.format(vid, ccode)
     url += '&client_ip=192.168.1.1'
     url += '&utid=' + fetch_cna()
     url += '&client_ts=' + str(int(time.time()))
-    return json.loads(GetHttpData(url))
+    # return json.loads(GetHttpData(url))
+    headers = {'Referer': referer,
+            'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.71 Safari/537.36'
+            }
+    return requests.get(url, headers=headers).json()
 
 
 def play(vid, playContinue=False):
