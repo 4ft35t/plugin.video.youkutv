@@ -2,7 +2,7 @@
 # default.py
 
 import xbmcgui, xbmcaddon, xbmc
-import json, sys, urllib, urllib2, gzip, StringIO, re, os, time, threading, socket, base64, math, cookielib
+import json, sys, urllib, urllib2, urlparse, gzip, StringIO, re, os, time, threading, socket, cookielib
 from video_concatenate import video_concatenate
 try:
    import StorageServer
@@ -1933,10 +1933,23 @@ def youku_ups(vid, ccode='0401', referer='http://v.youku.com'):
     url += '&client_ts=' + str(int(time.time()))
     # return json.loads(GetHttpData(url))
     headers = {'Referer': referer,
-            'User-Agent':'Mozilla/5.0 (iPad; CPU OS 10_1_1 like Mac OS X) AppleWebKit/602.2.14 (KHTML, like Gecko) Mobile/14B100'
+            'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36'
             }
     return requests.get(url, headers=headers).json()
 
+def change_cdn(url, dispatcher_url='vali.cp31.ott.cibntv.net'):
+    # if the cnd_url starts with an ip addr, it should be youku's old CDN
+    # which rejects http requests randomly with status code > 400
+    # change it to the dispatcher of aliCDN can do better
+    # at least a little more recoverable from HTTP 403
+    if dispatcher_url in url:
+        return url
+    elif 'k.youku.com' in url:
+        return url
+    else:
+        url_seg_list = list(urlparse.urlparse(url))
+        url_seg_list[1] = dispatcher_url
+        return urlparse.urlunparse(url_seg_list)
 
 def play(vid, playContinue=False):
     readSettings()
@@ -2015,7 +2028,8 @@ def play(vid, playContinue=False):
         for no in range(len(segs)):
             k = segs[no]['key']
             assert k != -1
-            urls.append(segs[no]["cdn_url"])
+            url = segs[no]["cdn_url"]
+            urls.append(change_cdn(url))
 
         playlist = xbmc.PlayList(1)
         playlist.clear()
