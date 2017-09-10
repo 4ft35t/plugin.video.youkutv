@@ -1933,7 +1933,7 @@ def youku_ups(vid, ccode='0401', referer='http://v.youku.com'):
     url += '&client_ts=' + str(int(time.time()))
     # return json.loads(GetHttpData(url))
     headers = {'Referer': referer,
-            'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.71 Safari/537.36'
+            'User-Agent':'Mozilla/5.0 (iPad; CPU OS 10_1_1 like Mac OS X) AppleWebKit/602.2.14 (KHTML, like Gecko) Mobile/14B100'
             }
     return requests.get(url, headers=headers).json()
 
