@@ -1935,6 +1935,7 @@ def youku_ups(vid, ccode='0401', referer='http://v.youku.com'):
     headers = {'Referer': referer,
             'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36'
             }
+    time.sleep(3)
     return requests.get(url, headers=headers).json()
 
 def change_cdn(url, dispatcher_url='vali.cp31.ott.cibntv.net'):
