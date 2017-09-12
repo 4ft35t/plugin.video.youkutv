@@ -2,7 +2,7 @@
 # default.py
 
 import xbmcgui, xbmcaddon, xbmc
-import json, sys, urllib, urllib2, urlparse, gzip, StringIO, re, os, time, threading, socket, cookielib
+import json, sys, urllib, urlparse, os, time, threading, socket
 from video_concatenate import video_concatenate
 try:
    import StorageServer
@@ -27,6 +27,10 @@ socket.setdefaulttimeout(10)
 #URL base
 HOST = 'http://tv.api.3g.youku.com/'
 IDS = 'pid=0ce22bfd5ef5d2c5&guid=12d60728bd267e3e0b6ab4d124d6c5f0&ngdid=357e71ee78debf7340d29408b88c85c4&ver=2.6.0&operator=T-Mobile_310260&network=WIFI&launcher=0'
+
+headers = {'Referer': 'http://v.youku.com',
+        'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36',
+}
 
 #Fixed tabs
 Navigation  = ['首页', '频道', '排行']
@@ -1929,15 +1933,11 @@ def fetch_cna():
         cna = requests.compat.quote(cna)
     return cna
 
-def youku_ups(vid, ccode='0401', referer='http://v.youku.com'):
+def youku_ups(vid, ccode='0401'):
     url = 'http://ups.youku.com/ups/get.json?vid={}&ccode={}'.format(vid, ccode)
     url += '&client_ip=192.168.1.1'
     url += '&utid=' + fetch_cna()
     url += '&client_ts=' + str(int(time.time()))
-    # return json.loads(GetHttpData(url))
-    headers = {'Referer': referer,
-            'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36'
-            }
     time.sleep(3)
     return requests.get(url, headers=headers).json()
 
@@ -2126,25 +2126,7 @@ def openWindow(window_name,session=None,**kwargs):
 def GetHttpData(url):
     log('Frech: ' + url)
     try:
-        req = urllib2.Request(url)
-        req.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) {0}{1}'.
-                       format('AppleWebKit/537.36 (KHTML, like Gecko) ',
-                              'Chrome/28.0.1500.71 Safari/537.36'))
-        req.add_header('Accept-encoding', 'gzip')
-        if (url.find('play.youku.com') != -1):
-            req.add_header('referer', 'http://static.youku.com')
-        response = urllib2.urlopen(req)
-        httpdata = response.read()
-        if response.headers.get('content-encoding', None) == 'gzip':
-            httpdata = gzip.GzipFile(fileobj=StringIO.StringIO(httpdata)).read()
-        response.close()
-        match = re.compile('encodingt=(.+?)"').findall(httpdata)
-        if len(match)<=0:
-            match = re.compile('meta charset="(.+?)"').findall(httpdata)
-        if len(match)>0:
-            charset = match[0].lower()
-            if (charset != 'utf-8') and (charset != 'utf8'):
-                httpdata = unicode(httpdata, charset).encode('utf8')
+        httpdata = requests.get(url, headers=headers).content
     except:
         if xbmcgui.Dialog().yesno('错误', '网络超时，是否继续？'):
             return GetHttpData(url)
@@ -2207,8 +2189,4 @@ try:
         openWindow('mysettings')
 except:
     if __name__ == '__main__':
-        cj = cookielib.CookieJar()
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        opener.addheaders = [('Cookie', '__ysuid={0}'.format(time.time()))]
-        urllib2.install_opener(opener)
         openWindow('main')
