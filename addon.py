@@ -1922,9 +1922,12 @@ def getProperty(item, key):
     return value
 
 def fetch_cna():
-    url = 'http://gm.mmstat.com/yt/ykcomment.play.commentInit?cna='
-    req = urllib2.urlopen(url)
-    return req.headers['Set-Cookie'].split(';')[0].split('=')[1]
+    url = 'http://log.mmstat.com/eg.js'
+    req = requests.get(url)
+    cna = req.headers['Set-Cookie'].split(';')[0].split('=')[1]
+    if '%' not in cna:
+        cna = requests.compat.quote(cna)
+    return cna
 
 def youku_ups(vid, ccode='0401', referer='http://v.youku.com'):
     url = 'http://ups.youku.com/ups/get.json?vid={}&ccode={}'.format(vid, ccode)
