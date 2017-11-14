@@ -1955,6 +1955,12 @@ def change_cdn(url, dispatcher_url='vali.cp31.ott.cibntv.net'):
         url_seg_list[1] = dispatcher_url
         return urlparse.urlunparse(url_seg_list)
 
+def add_headers(url):
+    # http://kodi.wiki/view/HTTP
+    param = '&'.join(['%s=%s' % (k, headers[k]) for k in headers])
+    return '%s|%s' % (url, param)
+
+
 def play(vid, playContinue=False):
     readSettings()
 
@@ -2033,7 +2039,9 @@ def play(vid, playContinue=False):
             k = segs[no]['key']
             assert k != -1
             url = segs[no]["cdn_url"]
-            urls.append(change_cdn(url))
+            url = change_cdn(url)
+            url = add_headers(url)
+            urls.append(url)
 
         playlist = xbmc.PlayList(1)
         playlist.clear()
