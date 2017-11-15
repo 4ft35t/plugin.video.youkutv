@@ -1999,7 +1999,7 @@ def play(vid, playContinue=False):
     except Exception, e:
         log(e)
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常0，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
         return
 
     #Select resolution.
@@ -2021,12 +2021,12 @@ def play(vid, playContinue=False):
                 break
     except:
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常2，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
         return
 
     if not stream.has_key('stream_type'):
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常3，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
         return
 
 
