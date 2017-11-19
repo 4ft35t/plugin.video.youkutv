@@ -48,7 +48,7 @@ mainData = [{'title': '搜索', 'image': 'yk_search.jpg', 'mtype': 'search'},
             {'title': '观看记录', 'image': 'yk_history.jpg', 'mtype': 'history'},
             {'title': '收藏', 'image': 'yk_favor.jpg', 'mtype': 'favor'}]
 settings_data = {'resolution':[u'1080P', u'超清', u'高清', u'标清', u'标清(3GP)'],
-                 'resolution_type':[['hd3','mp4hd3'], ['hd2','mp4hd2'], ['mp4','mp4hd'], ['flv','flvhd'], ['3gphd']],
+                 'resolution_type':[['hd3','mp4hd3'], ['hd2','mp4hd2', 'mp4hd2v2'], ['mp4','mp4hd'], ['flv','flvhd'], ['3gphd']],
                  'language':[u'默认', u'国语', u'粤语', u'英语'],
                  'language_code':[u'', u'guoyu', u'yue', u'yingyu'],
                  'play':['整合(试验阶段)', '分段', '堆叠'],
@@ -60,7 +60,7 @@ resolution_map = {'3gphd':  '3gp',
                   'mp4':    'mp4',
                   'mp4hd':  'mp4',
                   'hd2':    'flv',
-                  'mp4hd2': 'flv',
+                  'mp4hd2v2': 'flv',
                   'hd3':    'flv',
                   'mp4hd3': 'flv'}
 
