@@ -1933,7 +1933,7 @@ def fetch_cna():
         cna = requests.compat.quote(cna)
     return cna
 
-def youku_ups(vid, ccode='0401'):
+def youku_ups(vid, ccode='0406'):
     url = 'http://ups.youku.com/ups/get.json?vid={}&ccode={}'.format(vid, ccode)
     url += '&client_ip=192.168.1.1'
     url += '&utid=' + fetch_cna()
@@ -1994,7 +1994,7 @@ def play(vid, playContinue=False):
 
     xbmc.executebuiltin("ActivateWindow(busydialog)")
     try:
-        movdat = youku_ups(vid, '0401')['data']
+        movdat = youku_ups(vid, '0406')['data']
         assert 'stream' in movdat
     except Exception, e:
         log(e)
