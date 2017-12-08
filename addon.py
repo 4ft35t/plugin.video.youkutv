@@ -1933,7 +1933,7 @@ def fetch_cna():
         cna = requests.compat.quote(cna)
     return cna
 
-def youku_ups(vid, ccode='0501'):
+def youku_ups(vid, ccode='0508'):
     url = 'http://ups.youku.com/ups/get.json?vid={}&ccode={}'.format(vid, ccode)
     url += '&client_ip=192.168.1.1'
     url += '&utid=' + fetch_cna()
