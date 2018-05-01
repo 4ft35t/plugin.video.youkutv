@@ -47,22 +47,23 @@ ChannelData={'97': {'icon': 'channel_tv_icon.png', 'title': '电视剧'},
 mainData = [{'title': '搜索', 'image': 'yk_search.jpg', 'mtype': 'search'},
             {'title': '观看记录', 'image': 'yk_history.jpg', 'mtype': 'history'},
             {'title': '收藏', 'image': 'yk_favor.jpg', 'mtype': 'favor'}]
-settings_data = {'resolution':[u'1080P', u'超清', u'高清', u'标清', u'标清(3GP)'],
-                 'resolution_type':[['hd3','mp4hd3'], ['hd2','mp4hd2', 'mp4hd2v2'], ['mp4','mp4hd'], ['flv','flvhd'], ['3gphd']],
+settings_data = {'resolution':[u'1080P', u'超清', u'高清', u'标清'],
+                 'resolution_type':[['mp4hd3', 'mp4hd3v2'], ['mp4hd2', 'mp4hd2v2'], ['mp4hd', '3gphd'], ['mp4sd', 'flvhd']],
                  'language':[u'默认', u'国语', u'粤语', u'英语'],
                  'language_code':[u'', u'guoyu', u'yue', u'yingyu'],
                  'play':['整合(试验阶段)', '分段', '堆叠'],
                  'play_type':['concatenate', 'list', 'stack']}
 settings={'resolution':0, 'language':0, 'play':0}
-resolution_map = {'3gphd':  '3gp',
-                  'flv':    'flv',
-                  'flvhd':  'flv',
-                  'mp4':    'mp4',
-                  'mp4hd':  'mp4',
-                  'hd2':    'flv',
-                  'mp4hd2v2': 'flv',
-                  'hd3':    'flv',
-                  'mp4hd3': 'flv'}
+resolution_map = {
+    "3gphd": "mp4",
+    "mp4hd2": "hd2",
+    "mp4hd3": "hd3",
+    "flvhd": "flv",
+    "mp4hd3v2": "hd3",
+    "mp4hd2v2": "hd2",
+    "mp4sd": "flv",
+    "mp4hd": "mp4"
+}
 
 
 ACTION_MOVE_LEFT      = 1
@@ -2001,36 +2002,27 @@ def play(vid, playContinue=False):
         movdat = youku_ups(vid)['data']
         assert 'stream' in movdat
     except Exception, e:
-        log(e)
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放。\nNo stream.')
         return
 
     #Select resolution.
     stream = {}
-    resolution = ''
-    language_code = settings_data['language_code'][settings['language']]
-    try:
-        for i in range(settings['resolution'], len(settings_data['resolution'])):
-            for t in settings_data['resolution_type'][i]:
-                for s in movdat['stream'][::-1]:
-                    if settings['language'] == 0 or language_code == s['audio_lang'] or s['audio_lang'] == 'default':
-                        if t == s['stream_type']:
-                            stream = s
-                            resolution = settings_data['resolution_type'][i][0]
-                            break
-                if stream.has_key('stream_type'):
-                    break
-            if stream.has_key('stream_type'):
+    # resolution from higher to lower
+    for i in range(settings['resolution'], len(settings_data['resolution'])):
+        if stream:
+            break
+        for t in settings_data['resolution_type'][i]:
+            if stream:
                 break
-    except:
-        xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
-        return
+            for s in movdat['stream'][::-1]:
+                if t == s['stream_type']:
+                    stream = s
+                    break
 
-    if not stream.has_key('stream_type'):
+    if not stream:
         xbmc.executebuiltin( "Dialog.Close(busydialog)" )
-        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放')
+        xbmcgui.Dialog().ok('提示框', '解析地址异常，无法播放。\nStream type not matched.')
         return
 
 
